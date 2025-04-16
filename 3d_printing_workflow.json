@@ -1,0 +1,164 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 0
+            }
+          ]
+        },
+        "authentication": "airtableTokenApi",
+        "baseId": {
+          "__rl": true,
+          "value": "https://airtable.com/appVLFUcfspvHh2WI/pagVLg02eK7EAOvYI",
+          "mode": "url"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "https://airtable.com/appVLFUcfspvHh2WI/tblMfzQlTGLIea2nm/viwDf5grFbZDQdVze?blocks=hide",
+          "mode": "url"
+        },
+        "triggerField": "Last Modified",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        -280
+      ],
+      "id": "86f9a521-317e-4278-baa0-1aae4ef73383",
+      "name": "Airtable Trigger",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "GN10aENjlMU6alfW",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "base": {
+          "__rl": true,
+          "value": "appVLFUcfspvHh2WI",
+          "mode": "list",
+          "cachedResultName": "Job Application Tracker",
+          "cachedResultUrl": "https://airtable.com/appVLFUcfspvHh2WI"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblMfzQlTGLIea2nm",
+          "mode": "list",
+          "cachedResultName": "Job Titles",
+          "cachedResultUrl": "https://airtable.com/appVLFUcfspvHh2WI/tblMfzQlTGLIea2nm"
+        },
+        "id": "=rectrhPha7VdWbhGj",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -100,
+        0
+      ],
+      "id": "bd8c8985-dceb-4ec6-bdf4-5e4e99929854",
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "GN10aENjlMU6alfW",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -280,
+        0
+      ],
+      "id": "872378c9-5a22-4609-9e96-29aa28815eee",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "93a1cabb-257c-4301-b385-546b55759f7a",
+              "name": "job_title",
+              "value": "={{ $json[\"Job Title\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "83e4e1ed-1002-4e4c-8766-8c140c735595",
+              "name": "email",
+              "value": "={{ $json[\"Email\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        0
+      ],
+      "id": "3ce61cb2-7efe-4d1c-bcfe-1246b63779e3",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Airtable Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b92407e4-3f5a-41e3-820c-948712fe45f9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "07da0a16f738f39d8fdb0abf6f8938c84942d428b40a06c6470a97aaaa81b2f8"
+  },
+  "id": "yMGvH2xclBq4LQXC",
+  "tags": []
+}
