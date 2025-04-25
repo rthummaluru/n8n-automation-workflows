@@ -1,0 +1,664 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a7dcf492-5e27-49e3-84ed-d8cf6889c97e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": " https://www.workatastartup.com/jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "5ae227c6-e75f-46a9-8850-c0f40b929756",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "company",
+              "cssSelector": ".company-details a span.font-bold",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        -280
+      ],
+      "id": "e737ed30-0422-4070-a8ba-612cca48a512",
+      "name": "Company Name"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "summary",
+              "cssSelector": ".company-details a span.text-gray-600",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        -100
+      ],
+      "id": "ec11763d-1f75-4a31-bc5e-f6a1b7548341",
+      "name": "Company Summary"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "=jobTitle",
+              "cssSelector": ".job-name a",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        80
+      ],
+      "id": "3a59717c-ac59-4b9b-824e-17bdc618e8bb",
+      "name": "Job Title"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "=link",
+              "cssSelector": ".job-name a",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        260
+      ],
+      "id": "5713b683-53a1-453d-abc9-a58e6f5882c0",
+      "name": "Job Link"
+    },
+    {
+      "parameters": {
+        "jsCode": "const companyNames = $(\"Company Name\")\n  .all()\n  .map((item) => item.json.company);\nconst companySummaries = $(\"Company Summary\")\n  .all()\n  .map((item) => item.json.summary);\nconst jobTitles = $(\"Job Title\")\n  .all()\n  .map((item) => item.json.jobTitle);\nconst jobLinks = $(\"Job Link\")\n  .all()\n  .map((item) => item.json.link);\n\nconst combinedData = companyNames.map((company, index) => {\n  return {\n    company: company,\n    summary: companySummaries[index],\n    jobTitle: jobTitles[index],\n    link: jobLinks[index],\n  };\n});\n\nreturn combinedData;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "id": "ac64c6da-567d-465f-a07e-2548cd65808d",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst output = [];\n\nconst companies = input[0].json.company || [];\nconst summaries = input[0].json.summary || [];\nconst jobTitles = input[0].json.jobTitle || [];\nconst links = input[0].json.link || [];\n\nfor (let i = 0; i < companies.length; i++) {\n  const raw = String(companies[i]).trim();\n\n  // Remove \"(S15)\" etc.\n  const name = raw.replace(/\\s*\\(.*?\\)/, \"\").trim();\n\n  // Clean domain\n  const domain = `${name.toLowerCase().replace(/\\s+/g, \"\")}.com`;\n\n  output.push({\n    json: {\n      company: name,\n      domain: domain,\n      summary: summaries[i] || \"\",\n      jobTitle: jobTitles[i] || \"\",\n      link: links[i] || \"\"\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "a9554642-1817-4844-9643-157310afa6b2",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "domain": "={{ $json.domain }}",
+        "limit": 1,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.hunter",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        0
+      ],
+      "id": "dfb6ea0e-0b80-420e-ac81-baa376a94004",
+      "name": "Hunter",
+      "credentials": {
+        "hunterApi": {
+          "id": "vz1qYNtlLHWnuJIp",
+          "name": "Hunter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        740,
+        -20
+      ],
+      "id": "8a8b1911-7dc1-456b-9824-86d53e8d4771",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appGRZtmHEf1pPJHs",
+          "mode": "list",
+          "cachedResultName": "client leads",
+          "cachedResultUrl": "https://airtable.com/appGRZtmHEf1pPJHs"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLgTgktoZmx5Zfg",
+          "mode": "list",
+          "cachedResultName": "Companies",
+          "cachedResultUrl": "https://airtable.com/appGRZtmHEf1pPJHs/tblLgTgktoZmx5Zfg"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.company }}",
+            "Job Title": "={{ $json.jobTitle }}",
+            "Summary": "={{ $json.summary }}",
+            "Job Posting": "={{ $json.link }}",
+            "Lead Email": "={{ $json.value }}",
+            "Domain": "={{ $json.domain }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Domain",
+              "displayName": "Domain",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead Email",
+              "displayName": "Lead Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Job Posting",
+              "displayName": "Job Posting",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1780,
+        -180
+      ],
+      "id": "d5c0ee3b-6bbf-4e47-9ad2-17bbaa802f3a",
+      "name": "Airtable1",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "tjrHkrmCO10ju1yX",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1560,
+        -180
+      ],
+      "id": "dc8f6bf4-3145-43d4-ba76-a8e284d908a6",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        780
+      ],
+      "id": "249b37e8-b945-4ab8-bff6-fa39b62eacc5",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "eOoFJ0aYXTfRk67s",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        560
+      ],
+      "id": "d57c04c2-3cf2-44e1-8ddc-8aa5ca60464f",
+      "name": "When chat message received",
+      "webhookId": "1c702034-34b1-43a5-a3a6-56ba87d795a1"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Role:\nYou are a Sales Representative for Layer Land, a consulting and recruiting firm focused on Additive Manufacturing (AM), 3D printing, and digital design talent placement.\n\nGoal:\nGenerate short, personalized cold outreach emails for specific companies hiring in AM or related fields, following the format and strategy below.\n\n📧 Output Format (Always Use This Email Template)\nSubject: Helping [Company Name] Find Top Talent in Additive Manufacturing\n\nHi [First Name],\n\nMy name is Tanvi, and I am the founder of LayerLand, a company specializing in management consulting for the 3D printing sector. As a niche vendor in this space, we provide end-to-end consulting services for Additive Manufacturing backed by AI.\n\nI came across [Company Name]’s work in [insert project/news/blog] and wanted to reach out.\n\nWe also specialize in placing pre-vetted talent in Additive Manufacturing roles, including [Job #1], [Job #2], and [Job #3]. Unlike generic staffing agencies, we focus exclusively on 3D printing, ensuring you get highly skilled professionals who fit your needs.\n\nI’d love to connect and share how we can help [Company Name] fill these roles faster and more efficiently. When’s a good time for a quick chat this week?\n\nBest,  \nTanvi  \nFounder, Layer Land\n✅ Important: Job titles must be written with commas, not bullets.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        360,
+        560
+      ],
+      "id": "749e624c-2f34-43d4-83ee-894eb19ab41b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        800
+      ],
+      "id": "7443b989-3170-4230-a671-cff542a80848",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        760,
+        760
+      ],
+      "id": "871f0bbf-adc7-4b15-b1cb-c50ee3b30076",
+      "name": "Gmail",
+      "webhookId": "d8b655fc-af00-4b8a-b76b-a7618d2e3fea",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "atgEQp3CwoYhCMNO",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appGRZtmHEf1pPJHs",
+          "mode": "list",
+          "cachedResultName": "client leads",
+          "cachedResultUrl": "https://airtable.com/appGRZtmHEf1pPJHs"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLgTgktoZmx5Zfg",
+          "mode": "list",
+          "cachedResultName": "Companies",
+          "cachedResultUrl": "https://airtable.com/appGRZtmHEf1pPJHs/tblLgTgktoZmx5Zfg"
+        },
+        "filterByFormula": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filter_By_Formula', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        780
+      ],
+      "id": "14c23fbf-03a0-4804-9f18-927a84e68401",
+      "name": "Airtable2",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "tjrHkrmCO10ju1yX",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Company Name",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Company Summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Job Title",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Job Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company Name": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company Summary": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Job Title": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Job Link": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Hunter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunter": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Airtable1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Airtable2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e84b1864-ac1c-405c-9f03-57c20b591b6a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5a292f67dce2a0444394f6075a2af02e8f715f79f2c896f341ceae63470395d5"
+  },
+  "id": "qMuoZAivcPFBawOt",
+  "tags": []
+}
