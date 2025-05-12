@@ -1,0 +1,2401 @@
+{
+  "name": "Sarah's Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1420,
+        125
+      ],
+      "id": "a4667eca-f2fd-4f6a-bfd5-21d9b76e7a8c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        428,
+        220
+      ],
+      "id": "ef804789-8e87-4275-964c-89244ff86a81",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "rEmwyYq6C6Ka7EeY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=***\nGPT Role:\nYou are a Sales Representative for Layer Land, a consulting and recruiting firm focused exclusively on Additive Manufacturing (AM), 3D printing, and digital design talent placement.\n\nObjective:\nWhen given a company name, generate a short, personalized cold outreach email using research-based best practices. Your goal is to book a meeting with the decision-maker. Don't stop at research keep going till you finish all the steps. Follow the template exact.\n***\n\nHi {{ $('Code1').item.json.First_Name }},<br><br>\n\nI’m Sarah, a Growth Strategist at <a href=\"https://www.layerland.ai/\">LayerLand</a> — a <strong>consulting</strong> and <strong>recruiting</strong> firm focused on <strong>Additive Manufacturing</strong> and digital design. I came across {{ $('Code1').item.json.Company }}’s work in <em>{{ $('Lead Research').item.json.choices[0].message.content }}</em> and was impressed by your team’s innovation in the AM space. I think we’d be a great fit since your team is growing in AM, and we specialize in finding the right talent to match your growth.<br><br>\n\nWe specialize in placing pre-vetted talent in roles like \n*** \nfill in the job names with the inferred jobs you get from {{ $json.choices[0].message.content }}\n***\n<strong>[Job #1]</strong>, <strong>[Job #2]</strong>, and <strong>[Job #3]</strong>, helping companies like yours scale technical teams faster — without sifting through unqualified resumes.<br><br>\n\n***\nInclude this line exactly as is:\nWould you happen to have availabilty for a quick chat this week? Would love to connect!<br><br>\n***\n\nBest,<br>\n--<br>\n<strong>Sarah Brooks</strong><br>\nGrowth Strategist<br>\nE: sarah@layerland.ai | W: <a href=\"https://www.layerland.ai/\">layerland.ai</a>\n\n***\nKeep total word count under 120 words\n\nUse short paragraphs and write for mobile readers\n\nTone = human, confident, and helpful (not robotic or salesy)\n\nDon't include a subject line\n***"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        340,
+        0
+      ],
+      "id": "cfa11948-6380-460f-a51c-fa1daaf137e7",
+      "name": "Write Email"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an AI recruiter that tracks company hiring activity.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"What roles is {{ $('Loop Over Items').item.json.Company }} likely hiring for right now in additive manufacturing or 3D printing space, list out three job names, make your output short and to the point. If you're able to find live job postings, list those out first, if not, infer based on previous knowledge. Make sure to search linkedin\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        0
+      ],
+      "id": "1ed5e5b1-ad25-4832-881d-5b2972e937c5",
+      "name": "Job Research"
+    },
+    {
+      "parameters": {
+        "sendTo": "=ronit.thummaluru@gmail.com",
+        "subject": "={{ $('Loop Over Items').item.json.Company }} X LayerLand ",
+        "message": "={{ $json.text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        716,
+        0
+      ],
+      "id": "6e4b1fe9-297b-4b72-9ed7-06f0eaec5286",
+      "name": "Send email",
+      "webhookId": "01040fa6-b91a-47de-a285-c2f0e272a605",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a researcher focused on 3d printing and additive manufactoring invloving {{ $json.Company }}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"What is the most relevant development by {{ $json.Company }} in 3D printing or Digital Design, make sure to give me the link to the blog post/article? Can also search {{ $json.Website }}. Keep it short and to the point\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -100,
+        0
+      ],
+      "id": "ac354623-d575-4ef8-92f0-3b2b4af2de2c",
+      "name": "Lead Research"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -320,
+        125
+      ],
+      "id": "ac49c5a8-75ba-49a2-aca9-5adccf631d7f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1156,
+        125
+      ],
+      "id": "6cd60ad0-3994-4fea-a0da-88c41b73b44d",
+      "name": "Wait",
+      "webhookId": "d16613b1-ce34-46d9-b65a-c3fd1e587a54"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().slice(0, 4);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -760,
+        125
+      ],
+      "id": "55adace4-e8d7-43c3-8cd2-c886b01cd74c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        125
+      ],
+      "id": "fe467417-5cb4-4430-b974-255f8a98a377",
+      "name": "Zoho CRM",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "J5pdGWv0JIPHekfn",
+          "name": "Zoho account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst updatedItems = items.map((item) => {\n  const fullName = item.json.Full_Name;\n  const [firstName, lastName] = fullName.split(\" \");\n  item.json.First_Name = firstName;\n  item.json.Last_Name = lastName;\n  return item;\n});\nreturn updatedItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        125
+      ],
+      "id": "facba6c3-4714-4a7d-ad23-e9bd669aff2e",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "content": "## Initial Email Sent \n",
+        "height": 420,
+        "width": 2640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1292,
+        -60
+      ],
+      "id": "59cb5f83-00cd-4165-8f08-d55798f5841c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1420,
+        1010
+      ],
+      "id": "411ac499-1c16-4497-8896-218f98b8d626",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        1010
+      ],
+      "id": "ef319b40-dba6-4484-8362-9ceeb71d6832",
+      "name": "Zoho CRM2",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "J5pdGWv0JIPHekfn",
+          "name": "Zoho account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "280525d8-e8a4-4879-a315-4c764b46d369",
+              "leftValue": "={{ $json.Lead_Status }}",
+              "rightValue": "Not Contacted (cold)",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -980,
+        125
+      ],
+      "id": "d5ca3547-d9f4-4d59-a5f4-fb4e4cb66697",
+      "name": "Get Cold Leads"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb99bc2c-a692-4299-b2ac-0051be1c0721",
+              "leftValue": "={{ $json.Follow_Up_Status }}",
+              "rightValue": "No Follow Up Sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "159c72e4-4896-4a08-93b6-31d35493166a",
+              "leftValue": "={{ $json.Lead_Status }}",
+              "rightValue": "1st Attempted to Contact (Email)",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -980,
+        1010
+      ],
+      "id": "f2aa8d4a-42e7-4c7d-902c-ddb12bb034f3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1d8c1fb1-9da2-44e5-aab4-128c5c32f495",
+              "leftValue": "={{ $json.Lead_Status }}",
+              "rightValue": "2nd Contact (Email)",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a96b8daa-0ce3-4f87-9a44-a4e6ac13080f",
+              "leftValue": "={{ $json.Follow_Up_Status }}",
+              "rightValue": "1 Follow Up Sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -760,
+        1260
+      ],
+      "id": "4644ed13-0cc9-4f69-beae-9dacedb0dcad",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "content": "## First Follow Up Chain\n\n",
+        "height": 460,
+        "width": 3580
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        400
+      ],
+      "id": "af310877-70e8-4081-bec8-ee8d203c2e71",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cdaab55c-bbda-4375-b172-5eedc38376e5",
+              "leftValue": "={{ $('If').item.json.Lead_Status }}",
+              "rightValue": "3rd Contact (Email)",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "38c0b780-16c7-4aae-9143-e4f685bad269",
+              "leftValue": "={{ $('If').item.json.Follow_Up_Status }}",
+              "rightValue": "=2 Follow Ups Sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -540,
+        1510
+      ],
+      "id": "bdd4269d-d27d-4a32-9c95-0004314ce4ab",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae2e75d7-ea45-4f65-bdaf-67cbe7c79205",
+              "leftValue": "={{ $json.Lead_Status }}",
+              "rightValue": "2nd Contact (Email)",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b9eaa4dc-68f8-444f-81ff-005ea0b997d1",
+              "leftValue": "={{ $json.Follow_Up_Status }}",
+              "rightValue": "1 Follow Up Sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -440,
+        1040
+      ],
+      "id": "5909a500-a9fb-4738-93d0-ec3a6e9d7d84",
+      "name": "2nd Follow Up Leads"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae2e75d7-ea45-4f65-bdaf-67cbe7c79205",
+              "leftValue": "={{ $json.Lead_Status }}",
+              "rightValue": "1st Attempted to Contact (Email)",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b9eaa4dc-68f8-444f-81ff-005ea0b997d1",
+              "leftValue": "={{ $json.Follow_Up_Status }}",
+              "rightValue": "No Follow Up Sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -760,
+        510
+      ],
+      "id": "8d992c37-a971-48e3-9911-50eb5b4f9c0e",
+      "name": "1st Follow Up Leads"
+    },
+    {
+      "parameters": {
+        "content": "## Second Follow Up Chain\n",
+        "height": 420,
+        "width": 3540
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        940
+      ],
+      "id": "b65d7d40-aeec-4d01-bf13-e288a9793e16",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Last Follow Up Chain\n \n",
+        "height": 460,
+        "width": 3440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        1460
+      ],
+      "id": "209089d3-8514-4c48-80a2-aba5ef9b64b2",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae2e75d7-ea45-4f65-bdaf-67cbe7c79205",
+              "leftValue": "={{ $json.Lead_Status }}",
+              "rightValue": "3rd Contact (Email)",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b9eaa4dc-68f8-444f-81ff-005ea0b997d1",
+              "leftValue": "={{ $json.Follow_Up_Status }}",
+              "rightValue": "2 Follow Ups Sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -300,
+        1620
+      ],
+      "id": "2654ba01-152b-43d1-ac4b-40ca9bee258d",
+      "name": "Last Follow Up Leads"
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "update",
+        "leadId": "={{ $('Loop Over Items').item.json.id }}",
+        "updateFields": {
+          "customFields": {
+            "customFields": [
+              {
+                "fieldId": "Follow_Up_Status",
+                "value": "No Follow Up Sent"
+              },
+              {
+                "fieldId": "Email_Thread_ID",
+                "value": "={{ $json.threadId }}"
+              }
+            ]
+          },
+          "First_Name": "",
+          "Lead_Status": "1st Attempted to Contact (Email)"
+        }
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        936,
+        0
+      ],
+      "id": "f51efbd9-5044-49db-922a-866f0b229a5a",
+      "name": "Update Lead Info",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "J5pdGWv0JIPHekfn",
+          "name": "Zoho account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        780,
+        610
+      ],
+      "id": "3299a881-d19a-48cd-8606-345453882649",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2348,
+        610
+      ],
+      "id": "74ee9324-ffba-43c0-ad04-c18b040d987e",
+      "name": "Wait1",
+      "webhookId": "55db6aca-d65b-4207-89c8-d7a351ef9316"
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "update",
+        "leadId": "={{ $('1st Follow Up Leads').item.json.id }}",
+        "updateFields": {
+          "customFields": {
+            "customFields": [
+              {
+                "fieldId": "Follow_Up_Status",
+                "value": "1 Follow Up Sent"
+              }
+            ]
+          },
+          "Lead_Status": "2nd Contact (Email)"
+        }
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        485
+      ],
+      "id": "730608bf-5cd0-440b-955b-be7034571299",
+      "name": "Zoho CRM1",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "J5pdGWv0JIPHekfn",
+          "name": "Zoho account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc75a5c5-c15f-47de-b8ce-66eee46bcfd4",
+              "name": "Company",
+              "value": "={{ $json.Company }}",
+              "type": "string"
+            },
+            {
+              "id": "bedb34ed-aa7e-4a7d-84b5-641c37b90f15",
+              "name": "Email",
+              "value": "={{ $json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "f2c40de3-47df-4e6d-9db9-d012b9b3f77a",
+              "name": "Last_Activity_Time",
+              "value": "={{ $json.Last_Activity_Time }}",
+              "type": "string"
+            },
+            {
+              "id": "36e49a68-fbdc-4a30-b003-1af4cf7e9584",
+              "name": "First_Name",
+              "value": "={{ $json.First_Name }}",
+              "type": "string"
+            },
+            {
+              "id": "03047fca-acdc-4214-a8c0-4caddb0a9810",
+              "name": "Lead_Status",
+              "value": "={{ $json.Lead_Status }}",
+              "type": "string"
+            },
+            {
+              "id": "6c91db8f-f150-4dfe-9da7-ed6a1e419d14",
+              "name": "Follow_Up_Status",
+              "value": "={{ $json.Follow_Up_Status }}",
+              "type": "string"
+            },
+            {
+              "id": "18f0cd76-ab5a-43f9-be59-058adb96e023",
+              "name": "Email_Thread_ID",
+              "value": "={{ $json.Email_Thread_ID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -540,
+        510
+      ],
+      "id": "e9bc1cda-255a-4f6d-bd1a-d5c72f099b25",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are Sarah, a Growth Strategist — a recruiting and consulting firm that specializes in Additive Manufacturing, 3D printing, and digital design.\n\nYou are replying to an email thread with a prospective client. Your job is to:\n\n1. Respond in a **friendly, concise, and helpful tone**\n2. Maintain a professional but approachable voice\n3. Reference specific parts of the incoming message (from memory) if useful\n4. You are replying to an initial cold email that the prospective client hasn't responded to in 3 days\n5. If they asked for more info, share a brief note about LayerLand:\n   “We specialize in placing pre-vetted talent for 3D printing and AM roles, including design, engineering, and technical leadership.”\n\nYou must never write a cold outreach — this is a follow-up reply in an active email thread.\n\nClose the email with:\n> Looking forward to hearing from you.  \n> Best,  \n> Sarah\n\nUse paragraph formatting. Keep it under 100 words unless more detail is clearly required.\n\n*** \nUse the correct name when addressing the recipient, use :  {{ $('Edit Fields').item.json.First_Name }}\n***"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        1000,
+        485
+      ],
+      "id": "6290e688-3833-4023-a994-5a7e7ce5bd96",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1088,
+        705
+      ],
+      "id": "7fcdf02b-0af9-4648-9aa0-9a0f0b69a13a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rEmwyYq6C6Ka7EeY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $('Loop Over Items1').item.json.Email_Thread_ID }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1454,
+        485
+      ],
+      "id": "99779e43-68de-4cb1-bd8f-8674df90f0d5",
+      "name": "Gmail",
+      "webhookId": "6ad9cf5e-2853-45f0-af6f-9f5865a7085a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "reply",
+        "threadId": "={{ $json.messages[1].threadId }}",
+        "messageId": "={{ $json.messages[0].id }}",
+        "emailType": "html",
+        "message": "={{ $('Basic LLM Chain').item.json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1830,
+        485
+      ],
+      "id": "fa8949e4-fd47-454a-9ad8-b94b3c0087e6",
+      "name": "Gmail1",
+      "webhookId": "43b5063d-4d40-4326-bb3f-c623e9463e60",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1180,
+        1140
+      ],
+      "id": "3b8012a3-3295-44a3-9072-fb3eb64c4820",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2660,
+        1140
+      ],
+      "id": "1d422672-843d-4679-a5ce-da6d34f840dd",
+      "name": "Wait2",
+      "webhookId": "55db6aca-d65b-4207-89c8-d7a351ef9316"
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "update",
+        "leadId": "={{ $('2nd Follow Up Leads').item.json.id }}",
+        "updateFields": {
+          "customFields": {
+            "customFields": [
+              {
+                "fieldId": "Follow_Up_Status",
+                "value": "2 Follow Ups Sent"
+              }
+            ]
+          },
+          "Lead_Status": "3rd Contact (Email)"
+        }
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        1020
+      ],
+      "id": "0133344b-68a6-41ef-b27c-b69646a21331",
+      "name": "Zoho CRM3",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "J5pdGWv0JIPHekfn",
+          "name": "Zoho account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc75a5c5-c15f-47de-b8ce-66eee46bcfd4",
+              "name": "Company",
+              "value": "={{ $json.Company }}",
+              "type": "string"
+            },
+            {
+              "id": "bedb34ed-aa7e-4a7d-84b5-641c37b90f15",
+              "name": "Email",
+              "value": "={{ $json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "f2c40de3-47df-4e6d-9db9-d012b9b3f77a",
+              "name": "Last_Activity_Time",
+              "value": "={{ $json.Last_Activity_Time }}",
+              "type": "string"
+            },
+            {
+              "id": "36e49a68-fbdc-4a30-b003-1af4cf7e9584",
+              "name": "First_Name",
+              "value": "={{ $json.First_Name }}",
+              "type": "string"
+            },
+            {
+              "id": "03047fca-acdc-4214-a8c0-4caddb0a9810",
+              "name": "Lead_Status",
+              "value": "={{ $json.Lead_Status }}",
+              "type": "string"
+            },
+            {
+              "id": "6c91db8f-f150-4dfe-9da7-ed6a1e419d14",
+              "name": "Follow_Up_Status",
+              "value": "={{ $json.Follow_Up_Status }}",
+              "type": "string"
+            },
+            {
+              "id": "18f0cd76-ab5a-43f9-be59-058adb96e023",
+              "name": "Email_Thread_ID",
+              "value": "={{ $json.Email_Thread_ID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -220,
+        1040
+      ],
+      "id": "e59eded8-e134-4ce3-8160-b9e6d600b62f",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are Sarah, a Growth Strategist — a recruiting and consulting firm that specializes in Additive Manufacturing, 3D printing, and digital design.\n\nYou are replying to an email thread with a prospective client. Your job is to:\n\n1. Respond in a **friendly, concise, and helpful tone**\n2. Maintain a professional but approachable voice\n3. Reference specific parts of the incoming message (from memory) if useful\n4. You are replying to an initial cold email that the prospective client hasn't responded to in 3 days\n5. If they asked for more info, share a brief note about LayerLand:\n   “We specialize in placing pre-vetted talent for 3D printing and AM roles, including design, engineering, and technical leadership.”\n\nYou must never write a cold outreach — this is a follow-up reply in an active email thread.\n\nClose the email with:\n> Looking forward to hearing from you.  \n> Best,  \n> Sarah\n\nUse paragraph formatting. Keep it under 100 words unless more detail is clearly required.\n\n*** \nUse the correct name when addressing the recipient, use :  {{ $('Edit Fields1').item.json.First_Name }}\n***"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        1480,
+        1020
+      ],
+      "id": "a971a895-8d5b-4617-a567-160d5156ad58",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1560,
+        1240
+      ],
+      "id": "aa2d5dc2-1417-4b17-ae0f-adfb4e30a0df",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "rEmwyYq6C6Ka7EeY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $('Loop Over Items2').item.json.Email_Thread_ID }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        1020
+      ],
+      "id": "1cdbcba1-ebe3-463d-aed1-8c95cd3f5c98",
+      "name": "Gmail2",
+      "webhookId": "6ad9cf5e-2853-45f0-af6f-9f5865a7085a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "reply",
+        "threadId": "={{ $json.messages[1].threadId }}",
+        "messageId": "={{ $json.messages[0].id }}",
+        "emailType": "html",
+        "message": "={{ $('Basic LLM Chain1').item.json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2220,
+        1020
+      ],
+      "id": "6a14cc35-92a3-4c2a-b05b-d065dfb33831",
+      "name": "Gmail3",
+      "webhookId": "43b5063d-4d40-4326-bb3f-c623e9463e60",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1454,
+        1610
+      ],
+      "id": "6f336e88-fcb4-4380-a604-4672d6886a53",
+      "name": "Loop Over Items3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2788,
+        1610
+      ],
+      "id": "67dfb760-3a71-471b-aecb-aae86c1e0aca",
+      "name": "Wait3",
+      "webhookId": "55db6aca-d65b-4207-89c8-d7a351ef9316"
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "update",
+        "leadId": "={{ $('Last Follow Up Leads').item.json.id }}",
+        "updateFields": {
+          "customFields": {
+            "customFields": [
+              {
+                "fieldId": "Follow_Up_Status",
+                "value": "3 Follow Ups Sent"
+              }
+            ]
+          },
+          "Lead_Status": "3rd Contact (Email)"
+        }
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        2568,
+        1485
+      ],
+      "id": "3328c54b-8c1f-4b1c-9e21-6bddcc12739a",
+      "name": "Zoho CRM4",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "J5pdGWv0JIPHekfn",
+          "name": "Zoho account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc75a5c5-c15f-47de-b8ce-66eee46bcfd4",
+              "name": "Company",
+              "value": "={{ $json.Company }}",
+              "type": "string"
+            },
+            {
+              "id": "bedb34ed-aa7e-4a7d-84b5-641c37b90f15",
+              "name": "Email",
+              "value": "={{ $json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "f2c40de3-47df-4e6d-9db9-d012b9b3f77a",
+              "name": "Last_Activity_Time",
+              "value": "={{ $json.Last_Activity_Time }}",
+              "type": "string"
+            },
+            {
+              "id": "36e49a68-fbdc-4a30-b003-1af4cf7e9584",
+              "name": "First_Name",
+              "value": "={{ $json.First_Name }}",
+              "type": "string"
+            },
+            {
+              "id": "03047fca-acdc-4214-a8c0-4caddb0a9810",
+              "name": "Lead_Status",
+              "value": "={{ $json.Lead_Status }}",
+              "type": "string"
+            },
+            {
+              "id": "6c91db8f-f150-4dfe-9da7-ed6a1e419d14",
+              "name": "Follow_Up_Status",
+              "value": "={{ $json.Follow_Up_Status }}",
+              "type": "string"
+            },
+            {
+              "id": "18f0cd76-ab5a-43f9-be59-058adb96e023",
+              "name": "Email_Thread_ID",
+              "value": "={{ $json.Email_Thread_ID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        1620
+      ],
+      "id": "f8215f88-5de4-4f39-aecd-6b020342c33e",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are Sarah, a Growth Strategist — a recruiting and consulting firm that specializes in Additive Manufacturing, 3D printing, and digital design.\n\nYou are replying to an email thread with a prospective client. Your job is to:\n\n1. Respond in a **friendly, concise, and helpful tone**\n2. Maintain a professional but approachable voice\n3. Reference specific parts of the incoming message (from memory) if useful\n4. You are replying to an initial cold email that the prospective client hasn't responded to in 3 days\n5. If they asked for more info, share a brief note about LayerLand:\n   “We specialize in placing pre-vetted talent for 3D printing and AM roles, including design, engineering, and technical leadership.”\n\nYou must never write a cold outreach — this is a follow-up reply in an active email thread.\n\nClose the email with:\n> Looking forward to hearing from you.  \n> Best,  \n> Sarah\n\nUse paragraph formatting. Keep it under 100 words unless more detail is clearly required.\n\n*** \nUse the correct name when addressing the recipient, use :  {{ $('Edit Fields2').item.json.First_Name }}\n***"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        1752,
+        1485
+      ],
+      "id": "bbba7933-7b3d-4050-9865-7fb47a2f62d0",
+      "name": "Basic LLM Chain2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        1705
+      ],
+      "id": "23cb175b-94ef-428b-92f1-2fe621575637",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "rEmwyYq6C6Ka7EeY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $('Loop Over Items3').item.json.Email_Thread_ID }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2128,
+        1485
+      ],
+      "id": "683f7672-5c63-4345-a9b6-cdd826a955e2",
+      "name": "Gmail4",
+      "webhookId": "6ad9cf5e-2853-45f0-af6f-9f5865a7085a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "reply",
+        "threadId": "={{ $json.messages[1].threadId }}",
+        "messageId": "={{ $json.messages[0].id }}",
+        "emailType": "html",
+        "message": "={{ $('Basic LLM Chain2').item.json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2348,
+        1485
+      ],
+      "id": "9a093b13-8517-4011-8074-b300876008f9",
+      "name": "Gmail5",
+      "webhookId": "43b5063d-4d40-4326-bb3f-c623e9463e60",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $json.Email_Thread_ID }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        510
+      ],
+      "id": "8588688e-2172-42e4-8e3d-0e60126e917e",
+      "name": "Gmail6",
+      "webhookId": "e8a6227c-24e9-4397-a4d5-a6b3d1476785",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const messages = $json.messages;\nconst sorted = messages.sort((a, b) => Number(a.internalDate) - Number(b.internalDate));\nconst lastMessage = sorted[sorted.length - 1];\nconst lastDate = new Date(Number(lastMessage.internalDate));\n\n// Check if any message is from someone other than you\nconst hasReply = messages.some(msg => {\n  const from = msg.From || \"\";\n  return !from.includes(\"sarah@layerland.ai\");\n});\n\nreturn {\n  json: {\n    hasReply,\n    lastEmailDate: lastDate.toISOString()\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        510
+      ],
+      "id": "2c20ff74-f3d4-4113-8f19-2939f553799e",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lastEmailDateRaw = $json.lastEmailDate;\n\n// Parse safely in case it's a string timestamp\nconst lastEmailDate = new Date(String(lastEmailDateRaw));\nconst now = new Date();\n\nconst msInDay = 1000 * 60 * 60 * 24;\nconst diffInMs = now.getTime() - lastEmailDate.getTime();\nconst diffInDays = diffInMs / msInDay;\n\nconst over3Days = diffInDays >= 3;\n\nreturn {\n    json: {\n      ...$json,\n      over3Days,\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        510
+      ],
+      "id": "8d55d695-e6cb-4a1a-9d32-da08f50b3f44",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9f784e5d-c7cd-421f-acf5-1ff79c5886cf",
+              "leftValue": "={{ $json.hasReply }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        340,
+        510
+      ],
+      "id": "b84d7a51-181b-4dff-acac-9960ac0e588d",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "sendTo": "tanvi@layerland.ai",
+        "subject": "New Client Message! ",
+        "emailType": "text",
+        "message": "X replied to Sarah",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        410
+      ],
+      "id": "04b03349-24d4-4b1d-a95a-825afaa4916d",
+      "name": "Gmail7",
+      "webhookId": "54f0c8ee-56fd-4cd8-bada-a1d06e9112b8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c55a058c-2df7-47f6-b4ec-fd0dbd74780a",
+              "leftValue": "={{ $('Code3').item.json.over3Days }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        610
+      ],
+      "id": "c629c419-7684-4072-92eb-a64a9bba9617",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $json.Email_Thread_ID }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        1040
+      ],
+      "id": "df35f2ea-b883-495c-a8de-08552b142aea",
+      "name": "Gmail8",
+      "webhookId": "e8a6227c-24e9-4397-a4d5-a6b3d1476785",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const messages = $json.messages;\nconst sorted = messages.sort((a, b) => Number(a.internalDate) - Number(b.internalDate));\nconst lastMessage = sorted[sorted.length - 1];\nconst lastDate = new Date(Number(lastMessage.internalDate));\n\n// Check if any message is from someone other than you\nconst hasReply = messages.some(msg => {\n  const from = msg.From || \"\";\n  return !from.includes(\"sarah@layerland.ai\");\n});\n\nreturn {\n  json: {\n    hasReply,\n    lastEmailDate: lastDate.toISOString()\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        1040
+      ],
+      "id": "87b14bc2-e767-40c7-8bbe-59f6c231bcc2",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lastEmailDateRaw = $json.lastEmailDate;\n\n// Parse safely in case it's a string timestamp\nconst lastEmailDate = new Date(String(lastEmailDateRaw));\nconst now = new Date();\n\nconst msInDay = 1000 * 60 * 60 * 24;\nconst diffInMs = now.getTime() - lastEmailDate.getTime();\nconst diffInDays = diffInMs / msInDay;\n\nconst over5Days = diffInDays >= 5;\n\nreturn {\n    json: {\n      ...$json,\n      over5Days,\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        1040
+      ],
+      "id": "8d94cc9f-e750-405a-a013-a42a84d2edca",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9f784e5d-c7cd-421f-acf5-1ff79c5886cf",
+              "leftValue": "={{ $json.hasReply }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        1040
+      ],
+      "id": "706f190b-0d69-45a1-ad53-4823368596a8",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "sendTo": "tanvi@layerland.ai",
+        "subject": "New Client Message! ",
+        "emailType": "text",
+        "message": "X replied to Sarah",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        960
+      ],
+      "id": "f03198bd-dc26-4acf-a0ff-d682bd6b5f7b",
+      "name": "Gmail9",
+      "webhookId": "54f0c8ee-56fd-4cd8-bada-a1d06e9112b8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c55a058c-2df7-47f6-b4ec-fd0dbd74780a",
+              "leftValue": "=",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1140
+      ],
+      "id": "1c196259-e0de-4421-b9e2-127e2077d573",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $json.Email_Thread_ID }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        140,
+        1620
+      ],
+      "id": "f1cbe1f9-e211-4eb7-af30-5b0c3840de7e",
+      "name": "Gmail10",
+      "webhookId": "e8a6227c-24e9-4397-a4d5-a6b3d1476785",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const messages = $json.messages;\nconst sorted = messages.sort((a, b) => Number(a.internalDate) - Number(b.internalDate));\nconst lastMessage = sorted[sorted.length - 1];\nconst lastDate = new Date(Number(lastMessage.internalDate));\n\n// Check if any message is from someone other than you\nconst hasReply = messages.some(msg => {\n  const from = msg.From || \"\";\n  return !from.includes(\"sarah@layerland.ai\");\n});\n\nreturn {\n  json: {\n    hasReply,\n    lastEmailDate: lastDate.toISOString()\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        1620
+      ],
+      "id": "8347031c-9fd9-47ac-afb0-ad6303cf82c1",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lastEmailDateRaw = $json.lastEmailDate;\n\n// Parse safely in case it's a string timestamp\nconst lastEmailDate = new Date(String(lastEmailDateRaw));\nconst now = new Date();\n\nconst msInDay = 1000 * 60 * 60 * 24;\nconst diffInMs = now.getTime() - lastEmailDate.getTime();\nconst diffInDays = diffInMs / msInDay;\n\nconst over5Days = diffInDays >= 5;\n\nreturn {\n    json: {\n      ...$json,\n      over5Days,\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        1620
+      ],
+      "id": "964b8d87-5986-42fd-b004-88735a21e138",
+      "name": "Code7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9f784e5d-c7cd-421f-acf5-1ff79c5886cf",
+              "leftValue": "={{ $json.hasReply }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        1620
+      ],
+      "id": "97e16f07-f535-48ce-aea2-be8d38b29a34",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "sendTo": "tanvi@layerland.ai",
+        "subject": "New Client Message! ",
+        "emailType": "text",
+        "message": "X replied to Sarah",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1140,
+        1480
+      ],
+      "id": "1d3a29a0-ecc3-47e5-a79f-18ec1b401e7f",
+      "name": "Gmail11",
+      "webhookId": "54f0c8ee-56fd-4cd8-bada-a1d06e9112b8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eXjrB0itPvU6lVMH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c55a058c-2df7-47f6-b4ec-fd0dbd74780a",
+              "leftValue": "=",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1140,
+        1700
+      ],
+      "id": "af279fb4-8cd8-414f-952d-1c489b34f3cd",
+      "name": "If8"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Zoho CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Email": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Research": {
+      "main": [
+        [
+          {
+            "node": "Write Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Research": {
+      "main": [
+        [
+          {
+            "node": "Job Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Lead Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zoho CRM": {
+      "main": [
+        [
+          {
+            "node": "Get Cold Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Zoho CRM2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zoho CRM2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Cold Leads": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "1st Follow Up Leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "2nd Follow Up Leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Last Follow Up Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Info": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1st Follow Up Leads": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zoho CRM1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Gmail6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail1": {
+      "main": [
+        [
+          {
+            "node": "Zoho CRM1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zoho CRM3": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Gmail8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Gmail2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail2": {
+      "main": [
+        [
+          {
+            "node": "Gmail3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail3": {
+      "main": [
+        [
+          {
+            "node": "Zoho CRM3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2nd Follow Up Leads": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zoho CRM4": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Gmail10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "Gmail4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail4": {
+      "main": [
+        [
+          {
+            "node": "Gmail5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail5": {
+      "main": [
+        [
+          {
+            "node": "Zoho CRM4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Last Follow Up Leads": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail6": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Gmail7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail8": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Gmail9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail10": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "Code7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code7": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Gmail11",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3c533ce5-8bef-4b73-acf4-960016110de5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4a0fe4e752fd9e32959f5853f07347b3ea9033502cf376ecc76be52dcb33cc17"
+  },
+  "id": "uWX3NUH7XcxD6OC6",
+  "tags": []
+}
